@@ -31,18 +31,19 @@ requests to it.
 
 1. Clone the repository:
 
-  bash
-  git clone 
-  https://github.com/Priyank26mei10007/hospital--management-system.git
-  cd hospital--management-system
+```bash
+git clone
+https://github.com/Priyank26mei10007/hospital--management-system.git
+cd hospital--management-system
+```
   
-3. Confirm Python 3 is installed:
+2. Confirm Python 3 is installed:
    ```bash
    python --version
    ```
    If this isn't recognized, install Python 3 from
    [python.org/downloads](https://www.python.org/downloads/) first.
-4. Install the project's dependencies:
+3. Install the project's dependencies:
    ```bash
    pip install -r requirements.txt
    ```
