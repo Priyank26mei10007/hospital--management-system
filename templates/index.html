@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ledger — Hospital Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F7F2; --surface: #FFFFFF; --ink: #14302B; --ink-soft: #4C6459;
+    --teal: #1F5C55; --teal-deep: #14413C; --gold: #C99A4B; --line: #D8E3DA;
+    --cancel: #A85C4E; --danger: #B4483B;
+    font-family: 'Inter', system-ui, sans-serif; box-sizing: border-box;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  body { margin: 0; background: var(--bg); color: var(--ink); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px 80px; }
+  header.site { display: flex; align-items: baseline; justify-content: space-between; padding: 28px 0 8px; flex-wrap: wrap; gap: 10px; }
+  .wordmark { font-family: 'Fraunces', serif; font-size: 21px; font-weight: 600; }
+  .wordmark span { color: var(--gold); }
+  header.site p { margin: 0; font-size: 13.5px; color: var(--ink-soft); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 26px 0 40px; }
+  .stat { padding: 20px 22px 20px 0; border-right: 1px solid var(--line); }
+  .stat:last-child { border-right: none; padding-right: 0; }
+  .stat .num { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 500; line-height: 1; }
+  .stat .label { font-size: 12.5px; color: var(--ink-soft); margin-top: 6px; }
+
+  .layout { display: grid; grid-template-columns: 320px 1fr; gap: 48px; align-items: start; }
+  h2.section-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 19px; margin: 0 0 18px; }
+
+  form#patient-form { display: flex; flex-direction: column; gap: 14px; }
+  .field label { display: block; font-size: 12.5px; color: var(--ink-soft); margin-bottom: 6px; }
+  .field input, .field select { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); font-size: 14.5px; font-family: inherit; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; padding: 11px 18px; font-size: 14.5px; font-weight: 500; border: 1px solid transparent; cursor: pointer; font-family: inherit; }
+  .btn-primary { background: var(--teal); color: #F4F7F2; margin-top: 4px; }
+  .btn-primary:hover { background: var(--teal-deep); }
+  .hint { font-size: 12.5px; color: var(--ink-soft); margin-top: -4px; }
+  .error-text { font-size: 12.5px; color: var(--danger); margin: -4px 0 0; }
+
+  .search-row { display: flex; gap: 10px; margin-bottom: 18px; }
+  .search-row input { flex: 1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 100px; background: var(--surface); color: var(--ink); font-size: 14.5px; font-family: inherit; }
+
+  .patient-list { border-top: 1px solid var(--line); }
+  .patient-row { display: grid; grid-template-columns: 34px 1fr auto auto auto; gap: 14px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .patient-row .pid { font-size: 12.5px; color: var(--ink-soft); }
+  .patient-row .pname { font-size: 15px; font-weight: 500; }
+  .patient-row .pmeta { display: block; font-size: 12.5px; color: var(--ink-soft); margin-top: 3px; }
+  .patient-row .pdept { font-size: 13px; color: var(--ink-soft); text-align: right; white-space: nowrap; }
+  .patient-row .pdept b { display: block; color: var(--ink); font-weight: 500; }
+
+  select.status-select { font-size: 12.5px; font-weight: 500; padding: 5px 10px; border-radius: 100px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-family: inherit; }
+  .icon-btn { border: none; background: none; color: var(--ink-soft); cursor: pointer; font-size: 13px; padding: 4px 6px; border-radius: 5px; }
+  .icon-btn:hover { color: var(--danger); background: rgba(180,72,59,0.08); }
+  .empty-state { padding: 40px 0; text-align: center; color: var(--ink-soft); font-size: 14.5px; }
+  footer.site { padding: 30px 0 10px; margin-top: 40px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-soft); display: flex; justify-content: space-between; }
+
+  @media (max-width: 760px) {
+    .layout { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .patient-row { grid-template-columns: 1fr; gap: 8px; }
+    .patient-row .pdept { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="site">
+    <div class="wordmark">ledger<span>.</span></div>
+    <p>Patient records, department routing, and consultation status — served by Flask.</p>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="layout">
+    <div>
+      <h2 class="section-title">Add patient</h2>
+      <form id="patient-form">
+        <div class="field">
+          <label for="f-name">Name</label>
+          <input id="f-name" type="text" required placeholder="Patient's full name" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-age">Age</label>
+            <input id="f-age" type="number" min="0" max="130" required placeholder="Age" />
+          </div>
+          <div class="field">
+            <label for="f-gender">Gender</label>
+            <select id="f-gender">
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-contact">Contact number</label>
+          <input id="f-contact" type="tel" placeholder="e.g. 98765 43210" />
+        </div>
+        <div class="field">
+          <label for="f-dept">Department</label>
+          <select id="f-dept"></select>
+        </div>
+        <div class="field">
+          <label for="f-doctor">Doctor</label>
+          <select id="f-doctor"></select>
+        </div>
+        <button type="submit" class="btn btn-primary">Add patient</button>
+        <p class="error-text" id="form-error" style="display:none;"></p>
+        <p class="hint">New patients start with status "Waiting".</p>
+      </form>
+    </div>
+
+    <div>
+      <h2 class="section-title">Patients</h2>
+      <div class="search-row">
+        <input id="search" type="text" placeholder="Search by name or ID…" />
+      </div>
+      <div class="patient-list" id="patient-list"></div>
+    </div>
+  </div>
+
+  <footer class="site">
+    <span>Ledger</span>
+    <span id="count-footer"></span>
+  </footer>
+</div>
+
+<script>
+  // Departments and statuses come from the Flask backend (app.py),
+  // rendered into this page as JSON so the JS doesn't need a separate
+  // request just to know what options exist.
+  const DEPARTMENTS = {{ departments | tojson }};
+  const STATUSES = {{ statuses | tojson }};
+
+  const deptSelect = document.getElementById('f-dept');
+  const doctorSelect = document.getElementById('f-doctor');
+
+  function populateDeptSelect() {
+    deptSelect.innerHTML = '';
+    Object.keys(DEPARTMENTS).forEach(dept => {
+      const opt = document.createElement('option');
+      opt.value = dept; opt.textContent = dept;
+      deptSelect.appendChild(opt);
+    });
+    populateDoctorSelect();
+  }
+  function populateDoctorSelect() {
+    doctorSelect.innerHTML = '';
+    DEPARTMENTS[deptSelect.value].forEach(doc => {
+      const opt = document.createElement('option');
+      opt.value = doc; opt.textContent = doc;
+      doctorSelect.appendChild(opt);
+    });
+  }
+  deptSelect.addEventListener('change', populateDoctorSelect);
+  populateDeptSelect();
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ---------- Talking to the Flask backend ----------
+  async function fetchPatients(query = '') {
+    const url = query ? `/api/patients?q=${encodeURIComponent(query)}` : '/api/patients';
+    const res = await fetch(url);
+    return res.json();
+  }
+
+  async function addPatientRequest(payload) {
+    const res = await fetch('/api/patients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return { ok: res.ok, data: await res.json() };
+  }
+
+  async function updateStatusRequest(id, status) {
+    await fetch(`/api/patients/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+  }
+
+  async function deletePatientRequest(id) {
+    await fetch(`/api/patients/${id}`, { method: 'DELETE' });
+  }
+
+  // ---------- Rendering ----------
+  function renderStats(patients) {
+    const total = patients.length;
+    const waiting = patients.filter(p => p.status === "Waiting").length;
+    const consult = patients.filter(p => p.status === "In Consultation").length;
+    const done = patients.filter(p => p.status === "Completed").length;
+
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><div class="num">${total}</div><div class="label">Total patients</div></div>
+      <div class="stat"><div class="num">${waiting}</div><div class="label">Waiting</div></div>
+      <div class="stat"><div class="num">${consult}</div><div class="label">In consultation</div></div>
+      <div class="stat"><div class="num">${done}</div><div class="label">Completed today</div></div>
+    `;
+    document.getElementById('count-footer').textContent =
+      total === 1 ? '1 patient on record' : `${total} patients on record`;
+  }
+
+  function renderList(patients) {
+    const container = document.getElementById('patient-list');
+
+    if (patients.length === 0) {
+      container.innerHTML = `<div class="empty-state">No patients found.</div>`;
+      return;
+    }
+
+    container.innerHTML = patients.map(p => `
+      <div class="patient-row" data-id="${p.id}">
+        <span class="pid">${String(p.id).padStart(2, '0')}</span>
+        <span>
+          <span class="pname">${escapeHtml(p.name)}</span>
+          <span class="pmeta">${p.age} yrs · ${escapeHtml(p.gender)}${p.contact ? ' · ' + escapeHtml(p.contact) : ''}</span>
+        </span>
+        <span class="pdept"><b>${escapeHtml(p.doctor)}</b>${escapeHtml(p.department)}</span>
+        <select class="status-select" data-id="${p.id}">
+          ${STATUSES.map(s => `<option value="${s}" ${s === p.status ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+        <button class="icon-btn" data-id="${p.id}" title="Remove patient">✕</button>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.status-select').forEach(sel => {
+      sel.addEventListener('change', async (e) => {
+        await updateStatusRequest(e.target.dataset.id, e.target.value);
+        refresh();
+      });
+    });
+    container.querySelectorAll('.icon-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        await deletePatientRequest(e.currentTarget.dataset.id);
+        refresh();
+      });
+    });
+  }
+
+  async function refresh() {
+    const query = document.getElementById('search').value.trim();
+    const patients = await fetchPatients(query);
+    renderStats(patients);
+    renderList(patients);
+  }
+
+  // ---------- Add patient form ----------
+  document.getElementById('patient-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('form-error');
+    errorEl.style.display = 'none';
+
+    const payload = {
+      name: document.getElementById('f-name').value.trim(),
+      age: parseInt(document.getElementById('f-age').value, 10),
+      gender: document.getElementById('f-gender').value,
+      contact: document.getElementById('f-contact').value.trim(),
+      department: deptSelect.value,
+      doctor: doctorSelect.value
+    };
+
+    const { ok, data } = await addPatientRequest(payload);
+    if (!ok) {
+      errorEl.textContent = data.error || 'Could not add patient.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    e.target.reset();
+    populateDeptSelect();
+    document.getElementById('f-name').focus();
+    refresh();
+  });
+
+  document.getElementById('search').addEventListener('input', refresh);
+
+  // ---------- Init ----------
+  refresh();
+</script>
+
+</body>
+</html>
