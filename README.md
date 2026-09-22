@@ -30,11 +30,11 @@ requests to it.
 ## Setup
 
 1. Clone the repository:
-   ```bash
+  bash
   git clone 
   https://github.com/Priyank26mei10007/hospital--management-system.git
   cd hospital--management-system
-   ```
+  
 2. Confirm Python 3 is installed:
    ```bash
    python --version
